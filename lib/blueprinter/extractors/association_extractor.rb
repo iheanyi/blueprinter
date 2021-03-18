@@ -13,6 +13,7 @@ module Blueprinter
       local_options = local_options.merge(options[:options]) if options[:options].is_a?(Hash)
       value = @extractor.extract(association_name, object, local_options, options_without_default)
       return default_value(options) if use_default_value?(value, options[:default_if])
+      local_options = local_options.merge(association_local_options(options[:options], value) if association_local_options(options[:options], value).is_a?(Hash)
       view = options[:view] || :default
       blueprint = association_blueprint(options[:blueprint], value)
       blueprint.prepare(value, view_name: view, local_options: local_options)
@@ -23,7 +24,11 @@ module Blueprinter
     def default_value(association_options)
       association_options.key?(:default) ? association_options.fetch(:default) : Blueprinter.configuration.association_default
     end
-
+    
+    def association_local_options(options, value)
+      options.is_a?(Proc) ? options.call(value) : options
+    end
+    
     def association_blueprint(blueprint, value)
       blueprint.is_a?(Proc) ? blueprint.call(value) : blueprint
     end
